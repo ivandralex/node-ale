@@ -1,18 +1,8 @@
 /* *****************************************************************************
- * A.L.E (Arcade Learning Environment)
- * Copyright (c) 2009-2013 by Yavar Naddaf, Joel Veness, Marc G. Bellemare,
- *  Matthew Hausknecht, and the Reinforcement Learning and Artificial Intelligence 
- *  Laboratory
- * Released under the GNU General Public License; see License.txt for details. 
- *
- * Based on: Stella  --  "An Atari 2600 VCS Emulator"
- * Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
- *
- * *****************************************************************************
- *  sharedLibraryInterfaceExample.cpp 
- *
- *  Sample code for running an agent with the shared library interface. 
- **************************************************************************** */
+ALE Node.js wrapper 
+Copyright (c) 2015-2015 Andrew Ivanov
+MIT License
+**************************************************************************** */
 
 #include <iostream>
 #include <ale_interface.hpp>
@@ -27,11 +17,7 @@
 using namespace std;
 using namespace v8;
 
-int play(int argc, char** argv) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " rom_file" << std::endl;
-        return 1;
-    }
+int play(std::string rom_file) {
 
     ALEInterface ale;
 
@@ -47,7 +33,7 @@ int play(int argc, char** argv) {
 
     // Load the ROM file. (Also resets the system for new settings to
     // take effect.)
-    ale.loadROM(argv[1]);
+    ale.loadROM(rom_file);
 
     // Get the vector of legal actions
     ActionVect legal_actions = ale.getLegalActionSet();
@@ -69,16 +55,33 @@ int play(int argc, char** argv) {
     return totalReward;
 }
 
-void Method(const v8::FunctionCallbackInfo<Value>& args) {
+void Play(const v8::FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = Isolate::GetCurrent();
   HandleScope scope(isolate);
-  args.GetReturnValue().Set(String::NewFromUtf8(isolate, "world"));
+
+  if (args.Length() < 1) {
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    return;
+  }
+
+  if (!args[0]->IsString()) {
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong ROM file path")));
+    return;
+  }
+
+  //string romFile = ;
+  v8::String::Utf8Value param1(args[0]->ToString());
+  std::string romFile = std::string(*param1);    
+
+  int totalReward = play(romFile);
+
+  args.GetReturnValue().Set(Integer::New(isolate, totalReward));
 }
 
-void Init(Handle<Object> exports) {
-  Isolate* isolate = Isolate::GetCurrent();
-  exports->Set(String::NewFromUtf8(isolate, "ale"),
-      FunctionTemplate::New(isolate, Method)->GetFunction());
+void Init(Handle<Object> exports, Handle<Object> module) {
+  NODE_SET_METHOD(exports, "play", Play);
 }
 
 NODE_MODULE(ale, Init)
