@@ -1,0 +1,1 @@
+g++ -o ../build/addon ../src/main.cpp -I $ALE_PATH/src -L$ALE_PATH -lale
