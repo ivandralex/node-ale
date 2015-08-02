@@ -17,13 +17,17 @@
 #include <iostream>
 #include <ale_interface.hpp>
 
+#include <node.h>
+#include <v8.h>
+
 #ifdef __USE_SDL
   #include <SDL.h>
 #endif
 
 using namespace std;
+using namespace v8;
 
-int main(int argc, char** argv) {
+int play(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " rom_file" << std::endl;
         return 1;
@@ -48,9 +52,10 @@ int main(int argc, char** argv) {
     // Get the vector of legal actions
     ActionVect legal_actions = ale.getLegalActionSet();
 
+    float totalReward = 0;
+
     // Play 10 episodes
     for (int episode=0; episode<10; episode++) {
-        float totalReward = 0;
         while (!ale.game_over()) {
             Action a = legal_actions[rand() % legal_actions.size()];
             // Apply the action and get the resulting reward
@@ -61,5 +66,19 @@ int main(int argc, char** argv) {
         ale.reset_game();
     }
 
-    return 0;
+    return totalReward;
 }
+
+void Method(const v8::FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
+  args.GetReturnValue().Set(String::NewFromUtf8(isolate, "world"));
+}
+
+void Init(Handle<Object> exports) {
+  Isolate* isolate = Isolate::GetCurrent();
+  exports->Set(String::NewFromUtf8(isolate, "ale"),
+      FunctionTemplate::New(isolate, Method)->GetFunction());
+}
+
+NODE_MODULE(ale, Init)

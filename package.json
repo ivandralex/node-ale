@@ -17,6 +17,10 @@
   ],
   "author": "Andrew Ivanov",
   "license": "MIT",
+  "gypfile": true,
+  "dependencies": {
+    "bindings": "~1.2.1"
+  },
   "bugs": {
     "url": "https://github.com/ivandralex/node-ale/issues"
   },

@@ -1,0 +1,1 @@
+LD_LIBRARY_PATH=$ALE_PATH ../build/addon ./roms/seaquest.bin
